@@ -1,0 +1,16 @@
+In/Out optimization					Standard cin and cout		Scanf and printf	Modified cin è cout
+Time							31,176s	1			3,276s			29,501s
+
+Optimization of the selection of pivot (with scanf)	Last	Random (6 measurements)	Median of three
+Time							13,157s	13,217s			13,143s
+
+Partition optimization (with scanf)			Towards each other		One way	
+Time							13,808s				16,727s	
+
+Recursion (with scanf)					2 branches			1 branch	With out recursion
+Time							13,276s				13,932s		25,219s
+
+Small array optimization (with scanf)			Merge Sort			Insertion Sort	
+Time							14,664s				12,741s	
+
+Number of numbers: 5 000 000
