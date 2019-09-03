@@ -1,7 +1,3 @@
-//
-// Created by Святослав on 28.04.2019.
-//
-
 #ifndef SALESMANPROBLEM_2_CMATRIXGRAPH_H
 #define SALESMANPROBLEM_2_CMATRIXGRAPH_H
 
