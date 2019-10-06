@@ -6,49 +6,52 @@
 #include <cassert>
 #include <bitset>
 #include <iterator>
-#define INT_MAX 2147483647
 
-const uint32_t alphabet_size = 26;
+constexpr uint32_t alphabet_size = 26;
 
-char FirstNonZeroBit(std::bitset<alphabet_size>& alphabet) {
-    for(int32_t i = 0; i < alphabet.size(); ++i) {
+template <size_t n>
+size_t FirstNonZeroBit(std::bitset<n>& alphabet) {
+    for(size_t i = 0; i < alphabet.size(); ++i) {
         if (alphabet[i])
-            return static_cast<char>('a' + i);
+            return i;
     }
 
-    throw std::runtime_error("Not valid prefix function.");
+    return n;
 }
 
-char FindMinCharacter(const std::string& answer, const std::vector<int32_t>& prefix_func) {
-    assert(!prefix_func.empty());
+char FindMinCharacter(const std::string& answer, const std::vector<size_t>& prefix_func) {
+    if (prefix_func.empty())
+        throw std::runtime_error("Non valid prefix function!");
 
     if (prefix_func.size() == 1) return 'a';
 
-    std::bitset<alphabet_size> alphabet(INT_MAX);
-    int32_t position = prefix_func[prefix_func.size() - 2];
+    std::bitset<alphabet_size> alphabet(std::numeric_limits<size_t>::max());
+    size_t position = prefix_func[prefix_func.size() - 2];
 
     while(position >= 0) {
-        alphabet[static_cast<int32_t>(answer[position]) - 'a'] = false;
+        alphabet[static_cast<size_t>(answer[position]) - 'a'] = false;
 
         if (!position) break;
 
         position = prefix_func[position - 1];
     }
 
-    return FirstNonZeroBit(alphabet);
+    size_t first_non_zero_bit = FirstNonZeroBit(alphabet);
+    if (alphabet.size() == first_non_zero_bit)
+        throw std::runtime_error("Non valid prefix function!");
+
+    return static_cast<char>(first_non_zero_bit + 'a');
 }
 
-template <typename in_iter_t, typename out_iter_t>
-void ReconstructionByPrefix(in_iter_t start_in, in_iter_t end_in, out_iter_t start_out) {
-    std::vector<int32_t> prefix_func;
+template <typename InIterT, typename OutIterT>
+void ReconstructionByPrefix(InIterT begin_in, InIterT end_in, OutIterT begin_out) {
+    std::vector<size_t> prefix_func;
     std::string answer;
 
-    int32_t cur_value = 0;
-    while(start_in != end_in) {
-        cur_value = *start_in;
-        ++start_in;
-
-        cur_value -= '0';
+    size_t cur_value = 0;
+    while(begin_in != end_in) {
+        cur_value = *begin_in;
+        ++begin_in;
 
         prefix_func.push_back(cur_value);
 
@@ -57,20 +60,18 @@ void ReconstructionByPrefix(in_iter_t start_in, in_iter_t end_in, out_iter_t sta
         } else {
             answer.push_back(FindMinCharacter(answer, prefix_func));
         }
-    }
 
-    for (int32_t i = 0; i < answer.size(); ++i) {
-        *start_out = answer[i];
-        ++start_out;
+        *begin_out = answer[answer.size() - 1];
+        ++begin_out;
     }
 }
 
 int main() {
-    std::istream_iterator<char> start_in(std::cin);
-    std::istream_iterator<char> end_in;
-    std::ostream_iterator<char> start_out(std::cout);
+    std::istream_iterator<size_t> begin_in(std::cin);
+    std::istream_iterator<size_t> end_in;
+    std::ostream_iterator<char> begin_out(std::cout);
 
-    ReconstructionByPrefix(start_in, end_in, start_out);
+    ReconstructionByPrefix(begin_in, end_in, begin_out);
 
     return 0;
 }
