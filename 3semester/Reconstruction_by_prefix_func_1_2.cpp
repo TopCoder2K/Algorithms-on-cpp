@@ -3,50 +3,73 @@
 
 #include <iostream>
 #include <vector>
+#include <cassert>
+#include <bitset>
+#define INT_MAX 2147483647
 
-char AddCharacter(std::string& answer, const std::vector<int32_t>& prefix_fuc) {
-    std::vector<bool> alphabet(26,true);
-    // alphabet[0] = false;
+const uint32_t alphabet_size = 26;
 
-    int32_t position = prefix_fuc.size() > 1 ? prefix_fuc[prefix_fuc.size() - 2] : -1;
+char FirstNonZeroBit(std::bitset<alphabet_size>& alphabet) {
+    for(int32_t i = 0; i < alphabet.size(); ++i) {
+        if (alphabet[i])
+            return static_cast<char>('a' + i);
+    }
+
+    throw std::runtime_error("Not valid prefix function.");
+}
+
+char FindMinCharacter(const std::string& answer, const std::vector<int32_t>& prefix_func) {
+    assert(!prefix_func.empty());
+
+    if (prefix_func.size() == 1) return 'a';
+
+    std::bitset<alphabet_size> alphabet(INT_MAX);
+    int32_t position = prefix_func[prefix_func.size() - 2];
+
     while(position >= 0) {
-        alphabet[static_cast<int32_t>(answer[position]) - 97] = false;
+        alphabet[static_cast<int32_t>(answer[position]) - 'a'] = false;
 
         if (position) {
-            position = prefix_fuc[position - 1];
+            position = prefix_func[position - 1];
         } else {
             break;
         }
     }
 
-    for(int32_t i = 0; i < alphabet.size(); ++i) {
-        if (alphabet[i])
-            return static_cast<char>(97 + i);
-    }
+    return FirstNonZeroBit(alphabet);
 }
 
-void ReconstructionByPrefix(std::string& answer) {
-    std::vector<int32_t> prefix_fuc;
+template <typename T>
+void ReconstructionByPrefix(std::istreambuf_iterator<T> start, std::istreambuf_iterator<T> end) {
+    std::vector<int32_t> prefix_func;
+    std::string answer;
 
-    int32_t cur_value;
-    while(std::cin >> cur_value && cur_value != -1) {
-        prefix_fuc.push_back(cur_value);
+    int32_t cur_value = 0;
+    while(cur_value != '\n' && start != end) {
+        cur_value = *start;
+        ++start;
+
+        if (cur_value < '0') continue; // Whitespaces.
+
+        cur_value -= '0';
+
+        prefix_func.push_back(cur_value);
 
         if (cur_value > 0) {
             answer.push_back(answer[cur_value - 1]);
         } else {
-            answer.push_back(AddCharacter(answer, prefix_fuc));
+            answer.push_back(FindMinCharacter(answer, prefix_func));
         }
     }
 
+    std::cout << answer;
 }
 
 int main() {
-    std::string answer;
+    std::istreambuf_iterator<char> start(std::cin);
+    std::istreambuf_iterator<char> end;
 
-    ReconstructionByPrefix(answer);
-
-    std::cout << answer;
+    ReconstructionByPrefix(start, end);
 
     return 0;
 }
