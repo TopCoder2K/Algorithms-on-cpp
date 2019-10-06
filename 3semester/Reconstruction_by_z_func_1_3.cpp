@@ -6,6 +6,7 @@
 #include <string>
 #include <bitset>
 #include <stdexcept>
+#include <iterator>
 #define INT_MAX 2147483647
 
 const uint32_t alphabet_size = 26;
@@ -26,29 +27,25 @@ char FindMinCharacter(const std::string& answer, std::vector<int32_t> forbidden_
     throw std::runtime_error("Not valid z-function.");
 }
 
-template <typename T>
-void ReconstructionByZ(std::istreambuf_iterator<T> start, std::istreambuf_iterator<T> end) {
+template <typename in_iter_t, typename out_iter_t>
+void ReconstructionByZ(in_iter_t start_in, in_iter_t end_in, out_iter_t start_out) {
     // Initialization.
     std::string answer;
     std::vector<int32_t> forbidden_chars;
 
-    int32_t cur_z_value = 0,
-    prefix_length = 0,
-    prefix_remaining_length = 0,
-    counter = 0;
+    int32_t cur_z_value = 0;
+    int32_t prefix_length = 0;
+    int32_t prefix_remaining_length = 0;
+    int32_t cur_pos = 0;
 
     answer += "a";
     forbidden_chars.push_back(0);
-    std::cin >> cur_z_value;
+    ++start_in; // Skip first value.
 
-    while(cur_z_value != '\n' && start != end) {
-        cur_z_value = *start;
-        ++start;
-
-        if (cur_z_value < '0') continue; // Whitespaces.
-
-        cur_z_value -= '0';
-        ++counter;
+    while(start_in != end_in) {
+        cur_z_value = *start_in;
+        ++start_in;
+        ++cur_pos;
 
         // Update coping if longer prefix is found.
         if (cur_z_value > prefix_remaining_length) {
@@ -63,7 +60,7 @@ void ReconstructionByZ(std::istreambuf_iterator<T> start, std::istreambuf_iterat
             answer += answer[prefix_length - prefix_remaining_length];
             --prefix_remaining_length;
 
-            // If current z_value gives prefix that ends in counter + prefix remaining length - 1,
+            // If current z_value gives prefix that ends in cur_pos + prefix remaining length - 1,
             // we have to prohibit the appropriate character.
             if (cur_z_value == prefix_remaining_length + 1)
                 forbidden_chars.push_back(cur_z_value);
@@ -75,15 +72,17 @@ void ReconstructionByZ(std::istreambuf_iterator<T> start, std::istreambuf_iterat
     }
 
     for (int32_t i = 0; i < answer.size(); ++i) {
-        std::cout << answer[i];
+        *start_out = answer[i];
+        ++start_out;
     }
 }
 
 int main() {
-    std::istreambuf_iterator<char> start(std::cin);
-    std::istreambuf_iterator<char> end;
+    std::istream_iterator<int32_t> start_in(std::cin);
+    std::istream_iterator<int32_t> end_in;
+    std::ostream_iterator<char> start_out(std::cout);
 
-    ReconstructionByZ(start, end);
+    ReconstructionByZ(start_in, end_in, start_out);
 
     return 0;
 }
