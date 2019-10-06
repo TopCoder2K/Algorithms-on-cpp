@@ -7,47 +7,56 @@
 #include <bitset>
 #include <stdexcept>
 #include <iterator>
-#define INT_MAX 2147483647
 
-const uint32_t alphabet_size = 26;
+constexpr uint32_t alphabet_size = 26;
 
-char FindMinCharacter(const std::string& answer, std::vector<int32_t> forbidden_chars) {
-    std::bitset<alphabet_size> alphabet(INT_MAX);
+template <size_t n>
+size_t FirstNonZeroBit(std::bitset<n>& alphabet) {
+    for(size_t i = 0; i < alphabet.size(); ++i) {
+        if (alphabet[i])
+            return i;
+    }
 
-    for (int32_t i = 0; i < forbidden_chars.size(); ++i) {
-        int32_t str_pos = forbidden_chars[i];
+    return n;
+}
+
+char FindMinCharacter(const std::string& answer, const std::vector<size_t>& forbidden_chars) {
+    std::bitset<alphabet_size> alphabet(std::numeric_limits<size_t>::max());
+
+    for (size_t i = 0; i < forbidden_chars.size(); ++i) {
+        size_t str_pos = forbidden_chars[i];
         alphabet[answer[str_pos] - 'a'] = false;
     }
 
-    for (int32_t i = 0; i < alphabet_size; ++i) {
-        if (alphabet[i])
-            return static_cast<char>(i + 'a');
-    }
+    size_t first_non_zero_bit = FirstNonZeroBit(alphabet);
 
-    throw std::runtime_error("Not valid z-function.");
+    if (first_non_zero_bit == alphabet.size())
+        throw std::runtime_error("Not valid z-function.");
+
+    return static_cast<char>(first_non_zero_bit + 'a');
 }
 
-template <typename in_iter_t, typename out_iter_t>
-void ReconstructionByZ(in_iter_t start_in, in_iter_t end_in, out_iter_t start_out) {
+template <typename InIterT, typename OutIterT>
+void ReconstructionByZ(InIterT begin_in, InIterT end_in, OutIterT begin_out) {
     // Initialization.
     std::string answer;
-    std::vector<int32_t> forbidden_chars;
+    std::vector<size_t> forbidden_chars;
 
-    int32_t cur_z_value = 0;
-    int32_t prefix_length = 0;
-    int32_t prefix_remaining_length = 0;
-    int32_t cur_pos = 0;
+    size_t cur_z_value = 0;
+    size_t prefix_length = 0;
+    size_t prefix_remaining_length = 0;
 
     answer += "a";
     forbidden_chars.push_back(0);
-    ++start_in; // Skip first value.
+    ++begin_in; // Skip first value.
+    *begin_out = 'a';
+    ++begin_out;
 
-    while(start_in != end_in) {
-        cur_z_value = *start_in;
-        ++start_in;
-        ++cur_pos;
+    while(begin_in != end_in) {
+        cur_z_value = *begin_in;
+        ++begin_in;
 
-        // Update coping if longer prefix is found.
+        // Update copying if longer prefix is found.
         if (cur_z_value > prefix_remaining_length) {
             prefix_remaining_length = prefix_length = cur_z_value;
             forbidden_chars.clear();
@@ -69,20 +78,19 @@ void ReconstructionByZ(in_iter_t start_in, in_iter_t end_in, out_iter_t start_ou
             forbidden_chars.clear();
             forbidden_chars.push_back(0);
         }
-    }
 
-    for (int32_t i = 0; i < answer.size(); ++i) {
-        *start_out = answer[i];
-        ++start_out;
+        // Print answer.
+        *begin_out = answer[answer.size() - 1];
+        ++begin_out;
     }
 }
 
 int main() {
-    std::istream_iterator<int32_t> start_in(std::cin);
-    std::istream_iterator<int32_t> end_in;
-    std::ostream_iterator<char> start_out(std::cout);
+    std::istream_iterator<size_t> begin_in(std::cin);
+    std::istream_iterator<size_t> end_in;
+    std::ostream_iterator<char> begin_out(std::cout);
 
-    ReconstructionByZ(start_in, end_in, start_out);
+    ReconstructionByZ(begin_in, end_in, begin_out);
 
     return 0;
 }
