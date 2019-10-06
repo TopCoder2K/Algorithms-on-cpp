@@ -16,28 +16,10 @@ p <= 30000, n <= 300000.
 #include <vector>
 #include <iterator>
 
-std::vector<int32_t> CalcPrefixFunc(const std::string& s) {
-    std::size_t n = s.size();
 
-    std::vector<int32_t> prefix_func(n, 0);
 
-    for (int32_t i = 1; i < n; ++i) {
-        int32_t j = prefix_func[i - 1];
-
-        while (j > 0 && s[j] != s[i]) {
-            j = prefix_func[j - 1];
-        }
-
-        if (s[j] == s[i]) ++j;
-
-        prefix_func[i] = j;
-    }
-
-    return prefix_func;
-}
-
-int32_t CalcPrefixFunc(const std::string& s, const std::vector<int32_t>& prefix_func,
-                       int32_t previous_pref_func_val, char sym) {
+size_t CalcPrefixFunc(const std::string& s, const std::vector<size_t>& prefix_func,
+                       size_t previous_pref_func_val, char sym) {
     while (previous_pref_func_val > 0 && s[previous_pref_func_val] != sym) {
         previous_pref_func_val = prefix_func[previous_pref_func_val - 1];
     }
@@ -47,42 +29,34 @@ int32_t CalcPrefixFunc(const std::string& s, const std::vector<int32_t>& prefix_
     return previous_pref_func_val;
 }
 
-template <typename in_iter_t, typename out_iter_t>
-void FindSubstr(in_iter_t start_in, in_iter_t end_in, out_iter_t start_out) {
-    std::string pattern;
-    char sym = 0;
-
-    // Read pattern.
-    while(start_in != end_in) {
-        sym = *start_in;
-        ++start_in;
-
-        if (sym == '\n') break;
-
-        pattern += sym;
-    }
-    pattern += '#';
-
+template <typename InIterT, typename OutIterT>
+void FindSubstr(InIterT begin_in, InIterT end_in, OutIterT begin_out, const std::string& pattern) {
     // Calculate prefix function for the pattern.
-    const std::vector<int32_t> pattern_pref_func = CalcPrefixFunc(pattern);
-    int32_t cur_pos = 0;
-    int32_t previous_pref_func_val = pattern_pref_func[pattern_pref_func.size() - 1];
+    std::vector<size_t> pattern_pref_func(pattern.size(), 0);
+
+    for (size_t i = 1; i < pattern.size(); ++i) {
+        pattern_pref_func[i] = CalcPrefixFunc(pattern, pattern_pref_func, pattern_pref_func[i - 1], pattern[i]);
+    }
+
+    ++begin_in; // Skip '\n'.
+
+    size_t cur_pos = 0;
+    char sym = *begin_in;
+    size_t previous_pref_func_val = pattern_pref_func[pattern_pref_func.size() - 1];
 
     // Read another element, calculate its prefix function.
-    while(start_in != end_in) {
-        sym = *start_in;
-        ++start_in;
-
-        if (sym == '\n') break;
+    while(begin_in != end_in) {
+        ++begin_in;
 
         previous_pref_func_val = CalcPrefixFunc(pattern, pattern_pref_func, previous_pref_func_val, sym);
 
         if (previous_pref_func_val == pattern.size() - 1) {
-            *start_out = cur_pos + 2 - pattern.size();
-            ++start_out;
+            *begin_out = cur_pos + 2 - pattern.size();
+            ++begin_out;
         }
 
         ++cur_pos;
+        sym = *begin_in;
     }
 }
 
@@ -90,11 +64,15 @@ int main() {
     std::cin.tie(nullptr);
     noskipws(std::cin);
 
-    std::istream_iterator<char> start_in(std::cin);
-    std::istream_iterator<char> end_in;
-    std::ostream_iterator<int32_t> start_out(std::cout, " ");
+    std::string pattern;
+    std::cin >> pattern;
+    pattern += '#';
 
-    FindSubstr(start_in, end_in, start_out);
+    std::istream_iterator<char> begin_in(std::cin);
+    std::istream_iterator<char> end_in;
+    std::ostream_iterator<size_t> begin_out(std::cout, " ");
+
+    FindSubstr(begin_in, end_in, begin_out, pattern);
 
     return 0;
 }
