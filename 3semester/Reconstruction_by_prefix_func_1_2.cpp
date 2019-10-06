@@ -5,6 +5,7 @@
 #include <vector>
 #include <cassert>
 #include <bitset>
+#include <iterator>
 #define INT_MAX 2147483647
 
 const uint32_t alphabet_size = 26;
@@ -29,27 +30,23 @@ char FindMinCharacter(const std::string& answer, const std::vector<int32_t>& pre
     while(position >= 0) {
         alphabet[static_cast<int32_t>(answer[position]) - 'a'] = false;
 
-        if (position) {
-            position = prefix_func[position - 1];
-        } else {
-            break;
-        }
+        if (!position) break;
+
+        position = prefix_func[position - 1];
     }
 
     return FirstNonZeroBit(alphabet);
 }
 
-template <typename T>
-void ReconstructionByPrefix(std::istreambuf_iterator<T> start, std::istreambuf_iterator<T> end) {
+template <typename in_iter_t, typename out_iter_t>
+void ReconstructionByPrefix(in_iter_t start_in, in_iter_t end_in, out_iter_t start_out) {
     std::vector<int32_t> prefix_func;
     std::string answer;
 
     int32_t cur_value = 0;
-    while(cur_value != '\n' && start != end) {
-        cur_value = *start;
-        ++start;
-
-        if (cur_value < '0') continue; // Whitespaces.
+    while(start_in != end_in) {
+        cur_value = *start_in;
+        ++start_in;
 
         cur_value -= '0';
 
@@ -62,14 +59,18 @@ void ReconstructionByPrefix(std::istreambuf_iterator<T> start, std::istreambuf_i
         }
     }
 
-    std::cout << answer;
+    for (int32_t i = 0; i < answer.size(); ++i) {
+        *start_out = answer[i];
+        ++start_out;
+    }
 }
 
 int main() {
-    std::istreambuf_iterator<char> start(std::cin);
-    std::istreambuf_iterator<char> end;
+    std::istream_iterator<char> start_in(std::cin);
+    std::istream_iterator<char> end_in;
+    std::ostream_iterator<char> start_out(std::cout);
 
-    ReconstructionByPrefix(start, end);
+    ReconstructionByPrefix(start_in, end_in, start_out);
 
     return 0;
 }
