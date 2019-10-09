@@ -14,138 +14,140 @@
 //#pragma GCC optimize("Ofast,unroll-all-loops")
 //#pragma GCC optimize("-O3")
 
-constexpr int32_t alphabet_size = 26;
+constexpr int32_t k_alphabet_size = 26;
 
 class Trie {
-public:
-    class Node {
+    class Node_ {
     public:
-        std::vector<std::unique_ptr<Node>> children;
-        std::vector<Node *> transition;
-        std::vector<int32_t> pattern_substr_numbers;
-        Node * const parent;
-        const char char_to_parent;
-        Node *up;
-        Node *suff_link;
+        std::vector<std::unique_ptr<Node_>> children_;
+        std::vector<Node_ *> transition_;
+        std::vector<int32_t> pattern_substr_numbers_;
+        Node_ * const parent_;
+        const char char_to_parent_;
+        Node_ *up_;
+        Node_ *suff_link_;
 
-        explicit Node(Node *parent, const char edge) :
-                parent(parent),
-                char_to_parent(edge),
-                up(nullptr),
-                suff_link(nullptr) {
-            children.resize(alphabet_size);
-            transition.resize(alphabet_size);
+        explicit Node_(Node_ *parent, const char edge) :
+                parent_(parent),
+                char_to_parent_(edge),
+                up_(nullptr),
+                suff_link_(nullptr) {
+            children_.resize(k_alphabet_size);
+            transition_.resize(k_alphabet_size);
         }
-        ~Node() = default;
     };
 
+    Node_* GetSuffLink_(Node_ * const node);
+    Node_* GetLink_(Node_ * const node, const char symbol_to_parent);
+    Node_* GetUp_(Node_ * const node);
+    void AddString_(const std::basic_string_view<char>& str, const int32_t str_number);
+
+public:
     explicit Trie(std::vector<std::basic_string_view<char>>& pattern_substrings) {
-        root_ = std::make_unique<Node>(root_.get(), 'a');
+        root_ = std::make_unique<Node_>(root_.get(), 'a');
         state_ = root_.get();
 
         for (int32_t i = 0; i < pattern_substrings.size(); ++i) {
-            AddString(pattern_substrings[i], i);
+            AddString_(pattern_substrings[i], i);
         }
     }
-    ~Trie() = default;
 
     Trie& operator=(const Trie& other) = delete;
     Trie& operator=(Trie&& other) = delete;
     Trie(const Trie& other) = delete;
     Trie(Trie&& other) = delete;
 
-    Node* GetSuffLink(Node * const node);
-    Node* GetLink(Node * const node, const char symbol_to_parent);
-    Node* GetUp(Node * const node);
-    void AddString(const std::basic_string_view<char>& str, const int32_t str_number);
-    void NextState(const char sym, std::vector<int32_t>& pattern_positions, std::vector<int32_t>& substr_end_positions);
+    void NextState(
+            const char sym,
+            std::vector<int32_t>& pattern_positions,
+            const std::vector<int32_t>& substr_end_positions
+            );
 
-    Node* GetRoot() { return root_.get();}
 private:
-    std::unique_ptr<Node> root_;
-    Node *state_;
+    std::unique_ptr<Node_> root_;
+    Node_ *state_;
 };
 
-Trie::Node* Trie::GetSuffLink(Trie::Node * const node) {
-    if (!node->suff_link) {
+Trie::Node_* Trie::GetSuffLink_(Trie::Node_ * const node) {
+    if (!node->suff_link_) {
         // If node is root child we also make suffix link is root, because empty suffixes are not considered.
-        if (node == root_.get() || node->parent == root_.get()) {
-            node->suff_link = root_.get();
+        if (node == root_.get() || node->parent_ == root_.get()) {
+            node->suff_link_ = root_.get();
         } else {
-            node->suff_link = GetLink(GetSuffLink(node->parent), node->char_to_parent);
+            node->suff_link_ = GetLink_(GetSuffLink_(node->parent_), node->char_to_parent_);
         }
     }
 
-    return node->suff_link;
+    return node->suff_link_;
 }
 
-Trie::Node* Trie::GetLink(Trie::Node * const node, const char symbol_to_parent) {
-    Node *transition_ptr = node->transition[symbol_to_parent - 'a'];
+Trie::Node_* Trie::GetLink_(Trie::Node_ * const node, const char symbol_to_parent) {
+    Node_ *transition_ptr = node->transition_[symbol_to_parent - 'a'];
 
     if (!transition_ptr) {
-        if (node->children[symbol_to_parent - 'a']) {
-            transition_ptr = node->children[symbol_to_parent - 'a'].get();
+        if (node->children_[symbol_to_parent - 'a']) {
+            transition_ptr = node->children_[symbol_to_parent - 'a'].get();
         } else if (node == root_.get()) {
             transition_ptr = root_.get();
         } else {
-            transition_ptr = GetLink(GetSuffLink(node), symbol_to_parent);
+            transition_ptr = GetLink_(GetSuffLink_(node), symbol_to_parent);
         }
     }
 
     return transition_ptr;
 }
 
-Trie::Node* Trie::GetUp(Trie::Node * const node) {
-    Node *suff_link = GetSuffLink(node);
+Trie::Node_* Trie::GetUp_(Trie::Node_ * const node) {
+    Node_ *suff_link = GetSuffLink_(node);
 
-    if (!node->up) {
-        if (!suff_link->pattern_substr_numbers.empty()) {
-            node->up = suff_link;
+    if (!node->up_) {
+        if (!suff_link->pattern_substr_numbers_.empty()) {
+            node->up_ = suff_link;
         } else if (suff_link == root_.get()) {
-            node->up = root_.get();
+            node->up_ = root_.get();
         } else {
-            node->up = GetUp(suff_link);
+            node->up_ = GetUp_(suff_link);
         }
     }
 
-    return node->up;
+    return node->up_;
 }
 
-void Trie::AddString(const std::basic_string_view<char>& str, const int32_t str_number) {
-    Node *cur_node = root_.get();
+void Trie::AddString_(const std::basic_string_view<char>& str, const int32_t str_number) {
+    Node_ *cur_node = root_.get();
 
     for (int32_t i = 0; i < str.size(); ++i) {
-        Node *child = nullptr;
-        if (cur_node) child = cur_node->children[str[i] - 'a'].get();
+        Node_ *child = nullptr;
+        if (cur_node) child = cur_node->children_[str[i] - 'a'].get();
 
         if (!child) {
-            cur_node->children[str[i] - 'a'] = std::make_unique<Node>(cur_node, str[i]);
-            child = cur_node->children[str[i] - 'a'].get();
+            cur_node->children_[str[i] - 'a'] = std::make_unique<Node_>(cur_node, str[i]);
+            child = cur_node->children_[str[i] - 'a'].get();
         }
 
         cur_node = child;
     }
 
-    cur_node->pattern_substr_numbers.push_back(str_number);
+    cur_node->pattern_substr_numbers_.push_back(str_number);
 }
 
 void Trie::NextState(
         const char sym,
         std::vector<int32_t>& pattern_positions,
-        std::vector<int32_t>& substr_end_positions
+        const std::vector<int32_t>& substr_end_positions
         ) {
-    state_ = GetLink(state_, sym);
-    Trie::Node *up = state_;
+    state_ = GetLink_(state_, sym);
+    Trie::Node_ *up = state_;
 
     while (up != root_.get()) {
-        for (int32_t i = 0; i < up->pattern_substr_numbers.size(); ++i) {
+        for (int32_t i = 0; i < up->pattern_substr_numbers_.size(); ++i) {
             // Plus 1 because pattern substrings end positions are one more then their position in the pattern.
-            int32_t pattern_pos = pattern_positions.size() - 1 - substr_end_positions[up->pattern_substr_numbers[i]] + 1;
+            int32_t pattern_pos = pattern_positions.size() - 1 - substr_end_positions[up->pattern_substr_numbers_[i]] + 1;
             if (pattern_pos >= 0)
                 ++pattern_positions[pattern_pos];
         }
 
-        up = GetUp(up);
+        up = GetUp_(up);
     }
 }
 
@@ -233,4 +235,5 @@ OUT
 IN
 ???
 abcabc
-OUT*/
+OUT
+0 1 2 3*/
