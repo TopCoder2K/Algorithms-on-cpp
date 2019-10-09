@@ -17,31 +17,6 @@
 constexpr int32_t k_alphabet_size = 26;
 
 class Trie {
-    class Node_ {
-    public:
-        std::vector<std::unique_ptr<Node_>> children_;
-        std::vector<Node_ *> transition_;
-        std::vector<int32_t> pattern_substr_numbers_;
-        Node_ * const parent_;
-        const char char_to_parent_;
-        Node_ *up_;
-        Node_ *suff_link_;
-
-        explicit Node_(Node_ *parent, const char edge) :
-                parent_(parent),
-                char_to_parent_(edge),
-                up_(nullptr),
-                suff_link_(nullptr) {
-            children_.resize(k_alphabet_size);
-            transition_.resize(k_alphabet_size);
-        }
-    };
-
-    Node_* GetSuffLink_(Node_ * const node);
-    Node_* GetLink_(Node_ * const node, const char symbol_to_parent);
-    Node_* GetUp_(Node_ * const node);
-    void AddString_(const std::basic_string_view<char>& str, const int32_t str_number);
-
 public:
     explicit Trie(std::vector<std::basic_string_view<char>>& pattern_substrings) {
         root_ = std::make_unique<Node_>(root_.get(), 'a');
@@ -61,11 +36,35 @@ public:
             const char sym,
             std::vector<int32_t>& pattern_positions,
             const std::vector<int32_t>& substr_end_positions
-            );
+    );
 
 private:
+    struct Node_ {
+        std::vector<std::unique_ptr<Node_>> children_;
+        std::vector<Node_ *> transition_;
+        std::vector<int32_t> pattern_substr_numbers_;
+        Node_ * const parent_;
+        const char char_to_parent_;
+        Node_ *up_;
+        Node_ *suff_link_;
+
+        explicit Node_(Node_ *parent, const char edge) :
+                parent_(parent),
+                char_to_parent_(edge),
+                up_(nullptr),
+                suff_link_(nullptr) {
+            children_.resize(k_alphabet_size);
+            transition_.resize(k_alphabet_size);
+        }
+    };
+
     std::unique_ptr<Node_> root_;
     Node_ *state_;
+
+    Node_* GetSuffLink_(Node_ * const node);
+    Node_* GetLink_(Node_ * const node, const char symbol_to_parent);
+    Node_* GetUp_(Node_ * const node);
+    void AddString_(const std::basic_string_view<char>& str, const int32_t str_number);
 };
 
 Trie::Node_* Trie::GetSuffLink_(Trie::Node_ * const node) {
@@ -157,9 +156,6 @@ std::vector<int32_t> FindAllEntries (Trie& trie, std::vector<int32_t>& substr_en
     char sym = 0;
 
     while (std::cin >> sym) {
-        if (sym == '_')
-            break;
-
         pattern_positions.push_back(0);
 
         trie.NextState(sym, pattern_positions, substr_end_positions);
