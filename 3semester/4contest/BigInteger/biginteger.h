@@ -25,6 +25,10 @@ public:
         return *this;
     }
     BigInteger& operator=(BigInteger&& other) & noexcept {
+        if (this == &other) {
+            return *this;
+        }
+
         digits_ = std::move(other.digits_);
         negative_ = other.negative_;
         return *this;
