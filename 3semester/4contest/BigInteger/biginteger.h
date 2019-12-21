@@ -59,11 +59,9 @@ public:
     friend bool operator==(const BigInteger& lhs, const BigInteger& rhs) noexcept;
     friend bool operator!=(const BigInteger& lhs, const BigInteger& rhs) noexcept;
 
-    // ??????????????????????????????????????????????????????????????????????????????
     std::string toString() const;
 
     friend std::ostream& operator<<(std::ostream& out, const BigInteger& x);
-    // ??????????????????????????????????????????????????????????????????????????????
     friend std::istream& operator>>(std::istream& in, BigInteger& x);
 
     explicit operator bool() const noexcept;
@@ -72,22 +70,10 @@ private:
     static BigInteger Karatsuba_mul_(const BigInteger& lhs, const BigInteger& rhs);
     static int32_t divide_on_parts_(BigInteger& part1, BigInteger& part2, const BigInteger& origin);
     static BigInteger make_shift_(const BigInteger& to_shift, int32_t shift);
-    static std::vector<char> pop_front_(const std::vector<char>& to_shift);
     static void delete_leading_zeros(BigInteger& big_int);
     std::vector<char> digits_;   // Reversed order.
     bool negative_;
 };
-
-
-std::vector<char> BigInteger::pop_front_(const std::vector<char>& to_shift) {
-    uint32_t size = to_shift.size();
-    std::vector<char> shifted(size - 1);
-    for (uint32_t i = 1; i < size; ++i) {
-        shifted[i - 1] = to_shift[i];
-    }
-
-    return shifted;
-}
 
 int32_t BigInteger::divide_on_parts_(BigInteger& part1, BigInteger& part2, const BigInteger& origin) {
     int32_t size = origin.digits_.size();
@@ -346,7 +332,7 @@ BigInteger& BigInteger::operator/=(const BigInteger& other) & {
             result_reversed.push_back(cur_digit);
         }
 
-        shifted.digits_ = pop_front_(shifted.digits_);
+        shifted.digits_.erase(shifted.digits_.begin());
     }
 
     BigInteger result;
